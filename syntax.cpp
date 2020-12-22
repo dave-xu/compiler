@@ -3,27 +3,52 @@
 #include <cassert>
 #include <queue>
 #include <cstring>
+#include <sstream>
+#include <map>
+#include <cstdio>
 
 // block : expression CR
 // expression : term | expression + term | expression - term
 // term : primary | term * primary | term / primary
 // primary : num | (expression)
 
-void print_tree(Token* node)
+void print_tree(Token* node, const std::string& dotfile="tree.dot")
 {
+	std::stringstream ss;
+	ss << "graph\n{\n\tlabel=\"" << dotfile << "\"\n";
 	std::queue<Token*> que;
 	que.push(node);
+	int nodeidx = 0;
+	std::string nodename(node->literal.data(), node->literal.size());
+	std::map<Token*, int> tokenidxs;
+	tokenidxs[node] = nodeidx;
+	++nodeidx;
 	while(que.size() > 0)
 	{
 		Token* n = que.front();
 		que.pop();
 		std::string li(n->literal.data(), n->literal.size());
-		std::cout << "|" << li << "|" << n->tk << std::endl;
+		ss << "\tnode" << tokenidxs[n] << "[label=\"" << li << "\"];\n";
+
+		//std::cout << "|" << li << "|" << n->tk << std::endl;
 		for(int i = 0; i < (n->children).size(); ++i)
 		{
+			tokenidxs[n->children[i]] = nodeidx;
+			++nodeidx;
+			ss << "\tnode" << tokenidxs[n] << "--" << "node" << tokenidxs[n->children[i]] << ";\n";
 			que.push((n->children)[i]);
 		}
 	}
+	ss << "}";
+	std::cout << ss.str() << std::endl;
+	FILE* fp = 0;
+	fp = fopen(dotfile.c_str(), "w");
+	if(fp)
+	{
+		std::string str = ss.str();
+		fwrite(str.c_str(), 1, str.size(), fp);
+	}
+	fclose(fp);
 }
 
 double eval_tree(Token* node)
@@ -255,7 +280,7 @@ int main()
         std::cout << "----------------------------" << std::endl;
 	Token* rt = reduce_from_left(&tokens);
 	std::cout << ">>>>>>Tree:>>>>>>>>>>" << std::endl;
-	print_tree(rt);
+	print_tree(rt, "tree1.dot");
 	std::cout << "<<<<<<Value:<<<<<<<<<" << std::endl;
 	double v = eval_tree(rt);
 	std::cout << "val:" << v << std::endl;
@@ -271,7 +296,7 @@ int main()
         std::cout << "----------------------------" << std::endl;
 	rt = reduce_from_left(&tokens);
 	std::cout << ">>>>>>Tree:>>>>>>>>>>" << std::endl;
-	print_tree(rt);
+	print_tree(rt, "tree2.dot");
 	std::cout << "<<<<<<Value:<<<<<<<<<" << std::endl;
 	v = eval_tree(rt);
 	std::cout << "val:" << v << std::endl;
@@ -287,7 +312,7 @@ int main()
         std::cout << "----------------------------" << std::endl;
 	rt = reduce_from_left(&tokens);
 	std::cout << ">>>>>>Tree:>>>>>>>>>>" << std::endl;
-	print_tree(rt);
+	print_tree(rt, "tree3.dot");
 	std::cout << "<<<<<<Value:<<<<<<<<<" << std::endl;
 	v = eval_tree(rt);
 	std::cout << "val:" << v << std::endl;
@@ -303,7 +328,7 @@ int main()
         std::cout << "----------------------------" << std::endl;
 	rt = reduce_from_left(&tokens);
 	std::cout << ">>>>>>Tree:>>>>>>>>>>" << std::endl;
-	print_tree(rt);
+	print_tree(rt, "tree4.dot");
 	std::cout << "<<<<<<Value:<<<<<<<<<" << std::endl;
 	v = eval_tree(rt);
 	std::cout << "val:" << v << std::endl;

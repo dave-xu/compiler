@@ -183,7 +183,6 @@ bool parse_num(const std::vector<char> text, int& index, Token*& pToken)
 				--index;
 				pToken = new Token;
 				pToken->tk = TK_NUM;
-				li.push_back('\0');
 				pToken->literal = li;
 				sscanf(pToken->literal.data(), "%lf", &(pToken->val.dval));
 				return true;
